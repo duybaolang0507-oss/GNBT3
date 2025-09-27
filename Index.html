@@ -1,0 +1,184 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Ghi nhớ Biểu tượng</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      padding: 20px;
+      background-image: url("BG.jpg"); /* nền tuỳ chọn */
+      background-size: cover;
+      background-position: center;
+    }
+    h1 {
+      margin-bottom: 20px;
+      color: #fff;
+      text-shadow: 1px 1px 3px #000;
+    }
+    .game-board {
+      display: grid;
+      grid-template-columns: repeat(4, 120px);
+      gap: 25px; /* khoảng cách thẻ */
+      justify-content: center;
+    }
+    .card {
+  width: 120px;
+  height: 120px;
+  background: #AC9362;  /* unflipped card color */
+  color: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  padding: 8px;
+  transition: background 0.3s, color 0.3s;
+}
+
+    .card.flipped {
+      background: #fff;
+      color: #000;
+    }
+    .card.matched {
+      background: #4CAF50 !important; /* xanh lá */
+      color: #fff;
+    }
+    .card.wrong {
+      background: #e74c3c !important; /* đỏ */
+      color: #fff !important;
+    }
+.card img {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  opacity: 0;         /* hide by default */
+  transition: opacity 0.3s;
+}
+
+.card.flipped img {
+  opacity: 1;         /* show when flipped */
+}
+
+}
+
+  </style>
+</head>
+<body>
+  <h1>Ghi nhớ Biểu tượng</h1>
+  <div class="game-board" id="gameBoard"></div>
+<audio id="sound-correct" src="correct.mp3"></audio>
+<audio id="sound-wrong" src="wrong.mp3"></audio>
+
+
+  <script>
+const soundCorrect = document.getElementById("sound-correct");
+const soundWrong = document.getElementById("sound-wrong");
+
+   const pairs = [
+  ["statue.png", "Tượng Nữ thần Tự do"],
+  ["fire.png", "Hành hình kiểu Linsơ"],
+  ["fist.png", "Phong trào đấu tranh"],
+  ["scales.png", "Bất công & Phân biệt chủng tộc"],
+  ["declaration.png", "Tuyên ngôn Độc lập 1776."],
+  ["globe.png", "Đoàn kết quốc tế"],
+  ["building.png", "Thăm địa danh lịch sử"],
+  ["hotel.png", "Khách sạn Omni Parker House"]
+];
+
+
+    let cards = [];
+    pairs.forEach(([emoji, text]) => {
+      cards.push({ type: 'emoji', value: emoji, pair: text });
+      cards.push({ type: 'text', value: text, pair: emoji });
+    });
+
+    // Shuffle
+    cards.sort(() => Math.random() - 0.5);
+
+    const gameBoard = document.getElementById('gameBoard');
+    let flippedCards = [];
+    let lockBoard = false;
+    let matchedCount = 0;
+
+    cards.forEach((cardData) => {
+      const card = document.createElement('div');
+      card.classList.add('card');
+      card.dataset.type = cardData.type;
+      card.dataset.value = cardData.value;
+      card.dataset.pair = cardData.pair;
+     if (cardData.type === 'emoji') {
+  const img = document.createElement('img');
+  img.src = cardData.value;  // now the filename
+  img.alt = "";
+  img.style.width = "50px";   // adjust size
+  img.style.height = "50px";
+  card.appendChild(img);
+} else {
+  card.innerText = cardData.value;  // text card stays the same
+}
+
+
+      // ẩn text ban đầu
+      card.style.color = "transparent";
+
+      card.addEventListener('click', () => {
+        if (lockBoard || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+        card.classList.add('flipped');
+        card.style.color = "#000";
+
+        flippedCards.push(card);
+        if (flippedCards.length === 2) {
+          lockBoard = true;
+          setTimeout(checkMatch, 800);
+        }
+      });
+
+      gameBoard.appendChild(card);
+    });
+
+    function checkMatch() {
+      const [card1, card2] = flippedCards;
+if ((card1.dataset.value === card2.dataset.pair) || 
+    (card2.dataset.value === card1.dataset.pair)) {
+  card1.classList.add('matched');
+  card2.classList.add('matched');
+  soundCorrect.currentTime = 0;
+  soundCorrect.play();  // play correct sound
+  matchedCount += 2;
+
+  if (matchedCount === cards.length) {
+    setTimeout(() => {
+      alert("Xin chúc mừng, bạn đã hoàn thành trò chơi!");
+    }, 500);
+  }
+} else {
+  card1.classList.add("wrong");
+  card2.classList.add("wrong");
+  soundWrong.currentTime = 0;
+  soundWrong.play();   // play wrong sound
+
+  setTimeout(() => {
+    card1.classList.remove("flipped", "wrong");
+    card1.style.color = card1.dataset.type === 'text' ? "transparent" : "";
+    card2.classList.remove("flipped", "wrong");
+    card2.style.color = card2.dataset.type === 'text' ? "transparent" : "";
+  }, 600);
+}
+
+      flippedCards = [];
+      lockBoard = false;
+    }
+  </script>
+</body>
+</html>
+
+
